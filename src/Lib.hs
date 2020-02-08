@@ -4,10 +4,19 @@ module Lib where
 
 import qualified Crypto.Hash.MD5 as MD5
 import qualified Data.ByteString.UTF8 as BSU8
+import qualified Data.ByteString.Internal as BSI
 import qualified Data.ByteString.Base16 as BSB16
 
+ctx0 :: MD5.Ctx
 ctx0 = MD5.init
+
+ctx :: MD5.Ctx
 ctx = MD5.update ctx0 "FOOBAR"
+
+interpretHash hash =
+  a
+  where
+    (a, _) = BSB16.decode $ BSI.packChars hash
 
 nextChar :: Char -> Char
 nextChar 'a' = 'b'
@@ -126,19 +135,37 @@ hashCheck h string =
   then [string]
   else []
 
+newHashCheck :: BSU8.ByteString
+             -> BSU8.ByteString
+             -> [BSU8.ByteString]
 newHashCheck h string =
   if (BSB16.encode $ placeHolder string) == h
   then [string]
   else []
 
+placeHolder :: BSU8.ByteString
+            -> BSU8.ByteString
 placeHolder string =
   MD5.finalize $ MD5.update ctx string
 
-hashMap :: BSU8.ByteString
+evenNewerHashCheck h string =
+  if (placeHolder $ BSI.packChars string) == h
+  then [string]
+  else []
+
+
+
+hashMap' :: BSU8.ByteString
         -> [Char]
         -> [BSU8.ByteString]
-hashMap h salt =
+hashMap' h salt =
   head $
     filter (\x -> length x == 1) $ 
       map (\x -> newHashCheck h (BSU8.fromString $ x)) 
+      (iterate iterateString "")
+
+hashMap h salt =
+  head $
+    filter (\x -> length x == 1) $
+      map (\x -> evenNewerHashCheck (interpretHash h) x)
       (iterate iterateString "")
