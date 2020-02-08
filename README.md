@@ -30,7 +30,7 @@ This has been observed with the '€' character most notably. A fix is currently
 
 ### Version 0.3.0
 
--'cake' time: 0.99 seconds
+- 'cake' time: 0.99 seconds
 
 ## Version Descriptions
 
